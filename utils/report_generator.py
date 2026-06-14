@@ -2,6 +2,7 @@ from rich.console import Console
 from rich.table import Table
 
 def mostrar_reporte_comunidad(hallazgos):
+    """Genera reporte visual de conexiones externas detectadas."""
     console = Console()
     
     if not hallazgos:
@@ -16,12 +17,23 @@ def mostrar_reporte_comunidad(hallazgos):
     table.add_column("Ruta del Binario", justify="left", style="green")
 
     for h in hallazgos:
-        table.add_row(h["proceso"], str(h["pid"]), h["destino"], h["ruta"])
+        try:
+            table.add_row(
+                h.get("proceso", "N/A"),
+                str(h.get("pid", "N/A")),
+                h.get("destino", "N/A"),
+                h.get("ruta", "N/A")
+            )
+        except KeyError as e:
+            console.print(f"[bold red][!] Error: Campo faltante en hallazgo: {e}[/bold red]")
+            continue
 
     console.print(table)
+    console.print(f"\n[bold]Total de conexiones sospechosas detectadas: {len(hallazgos)}[/bold]\n")
 
 
 def mostrar_reporte_persistencia(hallazgos):
+    """Genera reporte visual de elementos de persistencia detectados."""
     console = Console()
     
     if not hallazgos:
@@ -36,8 +48,18 @@ def mostrar_reporte_persistencia(hallazgos):
     table.add_column("Estado Archivo", justify="center", style="green")
 
     for h in hallazgos:
-        # Marcamos en rojo si el archivo referenciado en el registro no existe en el disco
-        estado = "[green]OK[/green]" if h["existe_archivo"] else "[bold red]No Encontrado[/bold red]"
-        table.add_row(h["origen"], h["nombre_registro"], h["comando"], estado)
+        try:
+            # Marcamos en rojo si el archivo referenciado en el registro no existe en el disco
+            estado = "[green]✓ OK[/green]" if h.get("existe_archivo", False) else "[bold red]✗ No Encontrado[/bold red]"
+            table.add_row(
+                h.get("origen", "N/A"),
+                h.get("nombre_registro", "N/A"),
+                h.get("comando", "N/A"),
+                estado
+            )
+        except KeyError as e:
+            console.print(f"[bold red][!] Error: Campo faltante en hallazgo: {e}[/bold red]")
+            continue
 
     console.print(table)
+    console.print(f"\n[bold]Total de entradas de persistencia detectadas: {len(hallazgos)}[/bold]\n")
